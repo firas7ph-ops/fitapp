@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitPlan — Science-based training</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-bg: #ffffff;
+      --color-bg-secondary: #f5f5f3;
+      --color-bg-tertiary: #eeede9;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #6b6b67;
+      --color-text-tertiary: #9a9a96;
+      --color-border: rgba(0,0,0,0.12);
+      --color-border-secondary: rgba(0,0,0,0.22);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --green-mid: #5DCAA5;
+      --green-dark: #0F6E56;
+      --green-darkest: #085041;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1c1c1a;
+        --color-bg-secondary: #262624;
+        --color-bg-tertiary: #2e2e2c;
+        --color-text-primary: #f0efe9;
+        --color-text-secondary: #a0a09a;
+        --color-text-tertiary: #6e6e6a;
+        --color-border: rgba(255,255,255,0.1);
+        --color-border-secondary: rgba(255,255,255,0.18);
+        --green-light: #0a3d2b;
+      }
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--color-bg-tertiary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--color-text-primary);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .card {
+      background: var(--color-bg);
+      border-radius: var(--radius-xl);
+      border: 0.5px solid var(--color-border);
+      width: 100%;
+      max-width: 680px;
+      padding: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: var(--green);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon i { color: #fff; font-size: 22px; }
+    .logo-name { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-sub { font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1.8px; text-transform: uppercase; }
+
+    .progress-bar { display: flex; gap: 6px; margin-bottom: 2rem; }
+    .progress-step { flex: 1; height: 3px; background: var(--color-border); border-radius: 2px; transition: background 0.35s; }
+    .progress-step.done { background: var(--green); }
+    .progress-step.active { background: var(--green-mid); }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .screen-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .screen-sub { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.75rem; line-height: 1.55; }
+
+    .field { margin-bottom: 1.2rem; }
+    .field label {
+      display: block; font-size: 13px; font-weight: 500;
+      color: var(--color-text-secondary); margin-bottom: 6px;
+    }
+    .field input, .field select {
+      width: 100%; padding: 10px 13px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-md);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--green); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .option-card {
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+      user-select: none;
+    }
+    .option-card:hover { border-color: var(--green); background: var(--green-light); }
+    .option-card.selected { border-color: var(--green); background: var(--green-light); }
+    .option-card i { font-size: 26px; color: var(--green); display: block; margin-bottom: 8px; }
+    .opt-label { font-size: 13px; font-weight: 600; }
+    .opt-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.4; }
+
+    .btn-primary {
+      background: var(--green); color: #fff; border: none;
+      border-radius: var(--radius-md); padding: 13px 28px;
+      font-size: 15px; font-weight: 500; cursor: pointer;
+      width: 100%; margin-top: 0.5rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-secondary {
+      background: transparent; color: var(--color-text-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-md); padding: 11px 20px;
+      font-size: 14px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: var(--color-bg-secondary); }
+    .btn-row { display: flex; align-items: center; gap: 10px; margin-top: 1rem; }
+    .btn-row .btn-secondary { flex: none; }
+    .btn-row .btn-primary { flex: 1; margin-top: 0; }
+
+    /* Results */
+    .results-hero {
+      background: var(--green-dark);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.75rem;
+      color: #fff;
+    }
+    .results-hero h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+    .results-hero p { font-size: 13px; opacity: 0.8; }
+
+    .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 1.25rem 0; }
+    .macro-card {
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 14px 10px; text-align: center;
+    }
+    .m-val { font-size: 21px; font-weight: 600; color: var(--green); }
+    .m-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 1rem 0; }
+
+    .calorie-bar { display: flex; gap: 3px; height: 10px; border-radius: 6px; overflow: hidden; margin: 0.75rem 0; }
+    .cal-seg { height: 100%; }
+    .macro-legend { display: flex; gap: 18px; font-size: 12px; color: var(--color-text-secondary); }
+    .macro-legend span { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+    .section-heading {
+      font-size: 16px; font-weight: 600; margin: 2rem 0 1rem;
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 0.5px solid var(--color-border);
+    }
+    .section-heading i { color: var(--green); }
+
+    .tip-box {
+      background: var(--green-light);
+      border-radius: var(--radius-md);
+      padding: 13px 15px; margin: 1rem 0;
+      display: flex; gap: 10px;
+    }
+    .tip-box i { color: var(--green); font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .tip-box p { font-size: 13px; color: var(--green-darkest); line-height: 1.55; }
+
+    /* Training plan */
+    .plan-day {
+      border: 0.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .plan-day-header {
+      padding: 13px 16px;
+      background: var(--color-bg-secondary);
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+    .plan-day-header:hover { background: var(--color-bg-tertiary); }
+    .day-name { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .day-tag {
+      font-size: 11px; color: var(--green-dark);
+      background: var(--green-light);
+      padding: 3px 12px; border-radius: 20px; font-weight: 500;
+    }
+    .day-chevron { font-size: 16px; color: var(--color-text-tertiary); transition: transform 0.25s; }
+    .plan-day-header.open .day-chevron { transform: rotate(180deg); }
+    .plan-day-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.25s; }
+    .plan-day-body.open { max-height: 2000px; padding: 12px 16px; }
+
+    .exercise-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 0.5px solid var(--color-border);
+    }
+    .exercise-item:last-child { border-bottom: none; }
+    .exercise-gif {
+      width: 82px; height: 66px;
+      border-radius: 8px;
+      background: var(--color-bg-secondary);
+      overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .exercise-gif img { width: 100%; height: 100%; object-fit: cover; }
+    .exercise-gif .gif-fb { font-size: 26px; display: none; }
+    .exercise-info { flex: 1; min-width: 0; }
+    .exercise-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .exercise-meta { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 3px; }
+    .exercise-detail { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+    .exercise-badge {
+      display: inline-block; font-size: 10px; font-weight: 500;
+      background: var(--green-light); color: var(--green-dark);
+      padding: 2px 9px; border-radius: 20px; margin-top: 5px;
+    }
+
+    .loading-state { text-align: center; padding: 4rem 1rem; }
+    .spinner {
+      width: 38px; height: 38px;
+      border: 3px solid var(--green-light);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-state p { font-size: 15px; font-weight: 500; margin-bottom: 5px; }
+    .loading-state span { font-size: 13px; color: var(--color-text-secondary); }
+
+    .divider { border: none; border-top: 0.5px solid var(--color-border); margin: 1.5rem 0; }
+
+    @media (max-width: 480px) {
+      .card { padding: 1.25rem; }
+      .macro-grid, .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="card">
+
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-barbell"></i></div>
+      <div>
+        <div class="logo-name">FitPlan</div>
+        <div class="logo-sub">Science-based training</div>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+    </div>
+
+    <!-- Screen 0: Basic stats -->
+    <div id="screen0" class="screen active">
+      <div class="screen-title">Welcome. Let's build your plan.</div>
+      <div class="screen-sub">Answer a few quick questions and we'll calculate your exact caloric needs and build a research-backed training program tailored to you.</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="age" placeholder="e.g. 28" min="14" max="80">
+        </div>
+        <div class="field">
+          <label>Sex assigned at birth</label>
+          <select id="sex">
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Height (cm)</label>
+          <input type="number" id="height" placeholder="e.g. 175" min="120" max="230">
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" id="weight" placeholder="e.g. 75" min="30" max="300">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goTo(1)">Continue &nbsp;<i class="ti ti-arrow-right"></i></button>
+    </div>
+
+    <!-- Screen 1: Goal -->
+    <div id="screen1" class="screen">
+      <div class="screen-title">What's your main goal?</div>
+      <div class="screen-sub">This drives everything — your calories, macro split, and training type.</div>
+      <div class="option-grid" id="goalGrid">
+        <div class="option-card" onclick="selectOption('goal','lose','goalGrid',this)">
+          <i class="ti ti-flame"></i>
+          <div class="opt-label">Lose fat</div>
+          <div class="opt-sub">Caloric deficit + cardio focus</div>
+        </div>
+        <div class="option-card" onclick="selectOption('goal','maintain','goalGrid',this)">
+          <i class="ti ti-scale"></i>
+          <div class="opt-label">Stay lean</div>
+          <div class="opt-sub">Maintenance + body recomp</div>
+        </div>
+        <div class="option-card" onclick="selectOption('goal','gain','goalGrid',this)">
+          <i class="ti ti-barbell"></i>
+          <div class="opt-label">Build muscle</div>
+          <div class="opt-sub">Caloric surplus + lifting</div>
+        </div>
+        <div class="option-card" onclick="selectOption('goal','athletic','goalGrid',this)">
+          <i class="ti ti-run"></i>
+          <div class="opt-label">Athletic perf.</div>
+          <div class="opt-sub">Strength + endurance</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(0)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="goTo(2)">Continue &nbsp;<i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Screen 2: Activity + schedule -->
+    <div id="screen2" class="screen">
+      <div class="screen-title">How active are you right now?</div>
+      <div class="screen-sub">Be honest — this determines your TDEE (total daily energy expenditure).</div>
+      <div class="option-grid" id="activityGrid">
+        <div class="option-card" onclick="selectOption('activity','sedentary','activityGrid',this)">
+          <i class="ti ti-sofa"></i>
+          <div class="opt-label">Sedentary</div>
+          <div class="opt-sub">Desk job, little movement</div>
+        </div>
+        <div class="option-card" onclick="selectOption('activity','light','activityGrid',this)">
+          <i class="ti ti-walk"></i>
+          <div class="opt-label">Lightly active</div>
+          <div class="opt-sub">1–3 workouts/week</div>
+        </div>
+        <div class="option-card" onclick="selectOption('activity','moderate','activityGrid',this)">
+          <i class="ti ti-bicycle"></i>
+          <div class="opt-label">Moderately active</div>
+          <div class="opt-sub">3–5 workouts/week</div>
+        </div>
+        <div class="option-card" onclick="selectOption('activity','very','activityGrid',this)">
+          <i class="ti ti-bolt"></i>
+          <div class="opt-label">Very active</div>
+          <div class="opt-sub">6+ sessions/week</div>
+        </div>
+      </div>
+      <div class="field-row" style="margin-top:0.75rem;">
+        <div class="field">
+          <label>Training days per week</label>
+          <select id="trainingDays">
+            <option value="3">3 days</option>
+            <option value="4" selected>4 days</option>
+            <option value="5">5 days</option>
+            <option value="6">6 days</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Session duration</label>
+          <select id="sessionDuration">
+            <option value="30">30 min</option>
+            <option value="45" selected>45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="goTo(3)">Continue &nbsp;<i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Screen 3: Equipment + experience -->
+    <div id="screen3" class="screen">
+      <div class="screen-title">Any limitations or preferences?</div>
+      <div class="screen-sub">Select your equipment access. This shapes which exercises and machines we recommend.</div>
+      <div class="option-grid" id="equipGrid">
+        <div class="option-card" onclick="toggleOption('equip_gym',this)">
+          <i class="ti ti-building"></i>
+          <div class="opt-label">Full gym</div>
+          <div class="opt-sub">Machines + free weights</div>
+        </div>
+        <div class="option-card" onclick="toggleOption('equip_home',this)">
+          <i class="ti ti-home"></i>
+          <div class="opt-label">Home gym</div>
+          <div class="opt-sub">Dumbbells, bands</div>
+        </div>
+        <div class="option-card" onclick="toggleOption('equip_bodyweight',this)">
+          <i class="ti ti-user"></i>
+          <div class="opt-label">No equipment</div>
+          <div class="opt-sub">Bodyweight only</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Any injuries or areas to avoid? (optional)</label>
+        <input type="text" id="injuries" placeholder="e.g. lower back, left knee">
+      </div>
+      <div class="field">
+        <label>Experience level</label>
+        <select id="experience">
+          <option value="beginner">Beginner (0–1 year)</option>
+          <option value="intermediate" selected>Intermediate (1–3 years)</option>
+          <option value="advanced">Advanced (3+ years)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="generatePlan()">Build my plan &nbsp;<i class="ti ti-sparkles"></i></button>
+      </div>
+    </div>
+
+    <!-- Screen 4: Results -->
+    <div id="screen4" class="screen">
+      <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>Calculating your numbers...</p>
+        <span>Building a research-backed plan for you</span>
+      </div>
+      <div id="planContent" style="display:none;"></div>
+    </div>
+
+  </div><!-- /card -->
+
+  <p style="font-size:12px; color:var(--color-text-tertiary); text-align:center; max-width:480px;">
+    Calorie targets use the Mifflin-St Jeor formula. Training recommendations are based on published exercise science research. Always consult a healthcare provider before starting a new training program.
+  </p>
+</div>
+
+<script>
+  const state = { goal: null, activity: null, equip: new Set() };
+
+  const activityMultipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, very: 1.725 };
+  const goalLabels = { lose: 'Fat loss', maintain: 'Body recomposition', gain: 'Muscle gain', athletic: 'Athletic performance' };
+  const goalAdjust = { lose: -500, maintain: 0, gain: 300, athletic: 100 };
+  const macroSplits = {
+    lose:     { p: 0.35, c: 0.40, f: 0.25 },
+    maintain: { p: 0.30, c: 0.45, f: 0.25 },
+    gain:     { p: 0.30, c: 0.50, f: 0.20 },
+    athletic: { p: 0.25, c: 0.55, f: 0.20 }
+  };
+
+  function goTo(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen' + n).classList.add('active');
+    document.querySelectorAll('.progress-step').forEach((el, i) => {
+      el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done');
+      if (i === n) el.classList.add('active');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function selectOption(key, val, gridId, el) {
+    state[key] = val;
+    document.querySelectorAll('#' + gridId + ' .option-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function toggleOption(key, el) {
+    if (state.equip.has(key)) { state.equip.delete(key); el.classList.remove('selected'); }
+    else { state.equip.add(key); el.classList.add('selected'); }
+  }
+
+  function calcBMR(age, sex, height, weight) {
+    return sex === 'male'
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+  }
+
+  function getEquipKey() {
+    if (state.equip.has('equip_gym')) return 'gym';
+    if (state.equip.has('equip_home')) return 'home';
+    return 'bodyweight';
+  }
+
+  const exerciseDB = {
+    gain: {
+      gym: [
+        { name:'Barbell Back Squat', sets:'4', reps:'6–8', rest:'90s', muscle:'Quads, Glutes', machine:'Squat rack', gif:'https://media.giphy.com/media/xT9IgymxFoNvI0L3wc/giphy.gif', badge:'Compound' },
+        { name:'Bench Press', sets:'4', reps:'6–8', rest:'90s', muscle:'Chest, Triceps', machine:'Flat bench + barbell', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Compound' },
+        { name:'Bent-Over Row', sets:'4', reps:'8–10', rest:'75s', muscle:'Back, Biceps', machine:'Barbell', gif:'https://media.giphy.com/media/WZzUFWNiNMkfC/giphy.gif', badge:'Compound' },
+        { name:'Romanian Deadlift', sets:'3', reps:'8–10', rest:'90s', muscle:'Hamstrings, Glutes', machine:'Barbell', gif:'https://media.giphy.com/media/xT9IgFkpGd7FIMQEIE/giphy.gif', badge:'Compound' },
+        { name:'Overhead Press', sets:'3', reps:'6–8', rest:'90s', muscle:'Shoulders, Triceps', machine:'Barbell / Smith machine', gif:'https://media.giphy.com/media/ZFnkryHmLtIak/giphy.gif', badge:'Compound' },
+        { name:'Cable Lateral Raise', sets:'3', reps:'12–15', rest:'45s', muscle:'Lateral deltoid', machine:'Cable machine', gif:'https://media.giphy.com/media/xT0xeMA62E1XIlup68/giphy.gif', badge:'Isolation' },
+        { name:'Lat Pulldown', sets:'3', reps:'10–12', rest:'60s', muscle:'Lats, Biceps', machine:'Cable machine', gif:'https://media.giphy.com/media/ZFmNL5wFNBiB2/giphy.gif', badge:'Compound' },
+        { name:'Leg Press', sets:'3', reps:'10–12', rest:'75s', muscle:'Quads, Glutes', machine:'Leg press machine', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Compound' },
+        { name:'Incline Dumbbell Press', sets:'3', reps:'8–12', rest:'75s', muscle:'Upper chest', machine:'Incline bench + dumbbells', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Compound' },
+        { name:'Seated Cable Row', sets:'3', reps:'10–12', rest:'60s', muscle:'Mid-back, Biceps', machine:'Cable row station', gif:'https://media.giphy.com/media/ZFmNL5wFNBiB2/giphy.gif', badge:'Compound' },
+      ],
+      home: [
+        { name:'Push-up', sets:'4', reps:'10–15', rest:'60s', muscle:'Chest, Triceps', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Dumbbell Row', sets:'4', reps:'10–12', rest:'60s', muscle:'Back, Biceps', machine:'Dumbbell + bench', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Compound' },
+        { name:'Dumbbell Goblet Squat', sets:'4', reps:'12–15', rest:'60s', muscle:'Quads, Glutes', machine:'Single dumbbell', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Compound' },
+        { name:'Dumbbell Shoulder Press', sets:'3', reps:'10–12', rest:'60s', muscle:'Shoulders', machine:'Dumbbells', gif:'https://media.giphy.com/media/xT9IgIxMJJaKjSmGk8/giphy.gif', badge:'Compound' },
+        { name:'Romanian Deadlift (DB)', sets:'3', reps:'10–12', rest:'75s', muscle:'Hamstrings', machine:'Dumbbells', gif:'https://media.giphy.com/media/xT9IgFkpGd7FIMQEIE/giphy.gif', badge:'Compound' },
+        { name:'Dumbbell Curl', sets:'3', reps:'12–15', rest:'45s', muscle:'Biceps', machine:'Dumbbells', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Isolation' },
+        { name:'Tricep Kickback', sets:'3', reps:'12–15', rest:'45s', muscle:'Triceps', machine:'Dumbbell', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Isolation' },
+      ],
+      bodyweight: [
+        { name:'Push-up', sets:'4', reps:'12–20', rest:'60s', muscle:'Chest, Triceps', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Pull-up / Inverted row', sets:'4', reps:'6–12', rest:'75s', muscle:'Back, Biceps', machine:'Pull-up bar', gif:'https://media.giphy.com/media/xT9IgG8tHyRLvjUmVy/giphy.gif', badge:'Bodyweight' },
+        { name:'Bodyweight Squat', sets:'4', reps:'15–20', rest:'45s', muscle:'Quads, Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Bodyweight' },
+        { name:'Pike Push-up', sets:'3', reps:'10–15', rest:'60s', muscle:'Shoulders', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Glute Bridge', sets:'3', reps:'15–20', rest:'45s', muscle:'Glutes, Hamstrings', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgFkpGd7FIMQEIE/giphy.gif', badge:'Bodyweight' },
+        { name:'Plank', sets:'3', reps:'30–60s hold', rest:'30s', muscle:'Core', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Bodyweight' },
+      ]
+    },
+    lose: {
+      gym: [
+        { name:'Treadmill Intervals', sets:'1', reps:'20 min HIIT', rest:'—', muscle:'Full body cardio', machine:'Treadmill', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Cardio' },
+        { name:'Goblet Squat', sets:'3', reps:'15–20', rest:'45s', muscle:'Quads, Glutes', machine:'Kettlebell / dumbbell', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Compound' },
+        { name:'Cable Row', sets:'3', reps:'12–15', rest:'45s', muscle:'Back', machine:'Cable row machine', gif:'https://media.giphy.com/media/ZFmNL5wFNBiB2/giphy.gif', badge:'Compound' },
+        { name:'Dumbbell Lunges', sets:'3', reps:'12 each side', rest:'45s', muscle:'Legs, Glutes', machine:'Dumbbells', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Compound' },
+        { name:'Lat Pulldown', sets:'3', reps:'12–15', rest:'45s', muscle:'Lats', machine:'Cable machine', gif:'https://media.giphy.com/media/ZFmNL5wFNBiB2/giphy.gif', badge:'Compound' },
+        { name:'Rowing Machine', sets:'1', reps:'15 min steady', rest:'—', muscle:'Full body', machine:'Rowing ergometer', gif:'https://media.giphy.com/media/xT9IgIxMJJaKjSmGk8/giphy.gif', badge:'Cardio' },
+        { name:'Face Pull', sets:'3', reps:'15–20', rest:'30s', muscle:'Rear delts, rotator cuff', machine:'Cable machine', gif:'https://media.giphy.com/media/xT0xeMA62E1XIlup68/giphy.gif', badge:'Isolation' },
+      ],
+      home: [
+        { name:'Jumping Jacks', sets:'3', reps:'30 reps', rest:'30s', muscle:'Full body', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Cardio' },
+        { name:'Burpee', sets:'3', reps:'10–15', rest:'60s', muscle:'Full body', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Cardio' },
+        { name:'Mountain Climber', sets:'3', reps:'20 each', rest:'45s', muscle:'Core, Cardio', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgG8tHyRLvjUmVy/giphy.gif', badge:'Cardio' },
+        { name:'Dumbbell Circuit', sets:'3', reps:'12 each', rest:'60s', muscle:'Full body', machine:'Dumbbells', gif:'https://media.giphy.com/media/xT9IgIxMJJaKjSmGk8/giphy.gif', badge:'Circuit' },
+        { name:'Jump Squat', sets:'3', reps:'15', rest:'45s', muscle:'Quads, Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Plyometric' },
+      ],
+      bodyweight: [
+        { name:'Burpee', sets:'4', reps:'10–15', rest:'60s', muscle:'Full body', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Cardio' },
+        { name:'High Knees', sets:'3', reps:'30s', rest:'30s', muscle:'Legs, Cardio', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Cardio' },
+        { name:'Jump Squat', sets:'3', reps:'15', rest:'45s', muscle:'Quads, Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Plyometric' },
+        { name:'Push-up', sets:'3', reps:'10–15', rest:'45s', muscle:'Chest, Triceps', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Mountain Climber', sets:'3', reps:'20 each', rest:'30s', muscle:'Core, Cardio', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgG8tHyRLvjUmVy/giphy.gif', badge:'Cardio' },
+      ]
+    },
+    maintain: {
+      gym: [
+        { name:'Back Squat', sets:'3', reps:'10–12', rest:'75s', muscle:'Quads, Glutes', machine:'Squat rack', gif:'https://media.giphy.com/media/xT9IgymxFoNvI0L3wc/giphy.gif', badge:'Compound' },
+        { name:'Pull-up', sets:'3', reps:'8–12', rest:'75s', muscle:'Back, Biceps', machine:'Pull-up station', gif:'https://media.giphy.com/media/xT9IgG8tHyRLvjUmVy/giphy.gif', badge:'Compound' },
+        { name:'Dumbbell Press', sets:'3', reps:'10–12', rest:'60s', muscle:'Chest', machine:'Dumbbells + bench', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Compound' },
+        { name:'Plank', sets:'3', reps:'45s hold', rest:'30s', muscle:'Core', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Core' },
+        { name:'Leg Curl', sets:'3', reps:'12–15', rest:'45s', muscle:'Hamstrings', machine:'Leg curl machine', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Isolation' },
+        { name:'Cable Fly', sets:'3', reps:'12–15', rest:'45s', muscle:'Chest', machine:'Cable machine', gif:'https://media.giphy.com/media/ZFmNL5wFNBiB2/giphy.gif', badge:'Isolation' },
+      ],
+      home: [
+        { name:'Push-up', sets:'3', reps:'10–15', rest:'60s', muscle:'Chest, Triceps', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Bodyweight Squat', sets:'3', reps:'15–20', rest:'45s', muscle:'Quads, Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Bodyweight' },
+        { name:'Dumbbell Curl', sets:'3', reps:'12', rest:'45s', muscle:'Biceps', machine:'Dumbbells', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Isolation' },
+        { name:'Glute Bridge', sets:'3', reps:'15', rest:'45s', muscle:'Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgFkpGd7FIMQEIE/giphy.gif', badge:'Bodyweight' },
+      ],
+      bodyweight: [
+        { name:'Push-up', sets:'3', reps:'15', rest:'45s', muscle:'Chest, Triceps', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Bodyweight' },
+        { name:'Bodyweight Squat', sets:'3', reps:'20', rest:'45s', muscle:'Quads', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Bodyweight' },
+        { name:'Plank', sets:'3', reps:'30–60s', rest:'30s', muscle:'Core', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2JhpjWPccQmA7eBi/giphy.gif', badge:'Core' },
+        { name:'Superman Hold', sets:'3', reps:'10×3s hold', rest:'30s', muscle:'Lower back, Glutes', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgFkpGd7FIMQEIE/giphy.gif', badge:'Core' },
+      ]
+    },
+    athletic: {
+      gym: [
+        { name:'Power Clean', sets:'4', reps:'4–6', rest:'120s', muscle:'Full body power', machine:'Barbell', gif:'https://media.giphy.com/media/WZzUFWNiNMkfC/giphy.gif', badge:'Olympic lift' },
+        { name:'Box Jump', sets:'4', reps:'5', rest:'90s', muscle:'Legs, Explosiveness', machine:'Plyo box', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Plyometric' },
+        { name:'Front Squat', sets:'4', reps:'6–8', rest:'90s', muscle:'Quads, Core', machine:'Squat rack', gif:'https://media.giphy.com/media/xT9IgymxFoNvI0L3wc/giphy.gif', badge:'Compound' },
+        { name:'Sled Push', sets:'3', reps:'20m sprint', rest:'90s', muscle:'Full body conditioning', machine:'Weighted sled', gif:'https://media.giphy.com/media/xT9IgIxMJJaKjSmGk8/giphy.gif', badge:'Conditioning' },
+        { name:'Trap Bar Deadlift', sets:'4', reps:'5', rest:'120s', muscle:'Full body', machine:'Trap bar', gif:'https://media.giphy.com/media/WZzUFWNiNMkfC/giphy.gif', badge:'Compound' },
+      ],
+      home: [
+        { name:'Sprint Intervals', sets:'6', reps:'30s all-out', rest:'90s', muscle:'Legs, Cardio', machine:'Bodyweight (outdoor)', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Speed' },
+        { name:'Jump Squat', sets:'4', reps:'10', rest:'60s', muscle:'Quads, Explosiveness', machine:'Bodyweight', gif:'https://media.giphy.com/media/xT9IgxGj9wkTKRxVgI/giphy.gif', badge:'Plyometric' },
+        { name:'Dumbbell Snatch', sets:'3', reps:'6 each side', rest:'75s', muscle:'Full body', machine:'Dumbbell', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Power' },
+        { name:'Broad Jump', sets:'4', reps:'5', rest:'75s', muscle:'Legs, Power', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Plyometric' },
+      ],
+      bodyweight: [
+        { name:'Broad Jump', sets:'4', reps:'5', rest:'75s', muscle:'Legs, Power', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKQ8kAP0f9X5PoY/giphy.gif', badge:'Plyometric' },
+        { name:'Burpee', sets:'4', reps:'10', rest:'60s', muscle:'Full body', machine:'Bodyweight', gif:'https://media.giphy.com/media/l2YWqBgIalR8ZRFAM/giphy.gif', badge:'Conditioning' },
+        { name:'Sprint Intervals', sets:'6', reps:'20s all-out', rest:'60s', muscle:'Speed, Cardio', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Speed' },
+        { name:'Clapping Push-up', sets:'3', reps:'8–12', rest:'60s', muscle:'Chest, Power', machine:'Bodyweight', gif:'https://media.giphy.com/media/3o7TKP9ln2Dr6ze6f6/giphy.gif', badge:'Plyometric' },
+      ]
+    }
+  };
+
+  function buildDayPlan(dayNum, dayType, exercises) {
+    const pool = exercises.slice(0, Math.min(5, exercises.length));
+    const exHTML = pool.map(ex => `
+      <div class="exercise-item">
+        <div class="exercise-gif">
+          <img src="${ex.gif}" alt="${ex.name} exercise demonstration"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="gif-fb" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;">
+            <i class="ti ti-barbell" style="font-size:24px;color:var(--color-text-tertiary)"></i>
+          </div>
+        </div>
+        <div class="exercise-info">
+          <div class="exercise-name">${ex.name}</div>
+          <div class="exercise-meta">${ex.sets} sets &times; ${ex.reps} &nbsp;&middot;&nbsp; Rest ${ex.rest}</div>
+          <div class="exercise-detail"><i class="ti ti-target" style="font-size:12px"></i>&nbsp;${ex.muscle}</div>
+          ${ex.machine !== 'Bodyweight' ? `<div class="exercise-detail"><i class="ti ti-building" style="font-size:12px"></i>&nbsp;${ex.machine}</div>` : ''}
+          <span class="exercise-badge">${ex.badge}</span>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="plan-day">
+        <div class="plan-day-header" onclick="toggleDay(this)">
+          <div class="day-name"><i class="ti ti-calendar" style="font-size:14px;color:var(--green)"></i>&nbsp;Day ${dayNum}</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="day-tag">${dayType}</div>
+            <i class="ti ti-chevron-down day-chevron"></i>
+          </div>
+        </div>
+        <div class="plan-day-body">${exHTML}</div>
+      </div>
+    `;
+  }
+
+  function toggleDay(header) {
+    header.classList.toggle('open');
+    header.nextElementSibling.classList.toggle('open');
+  }
+
+  function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+  function generatePlan() {
+    goTo(4);
+    const age    = parseInt(document.getElementById('age').value)    || 30;
+    const sex    = document.getElementById('sex').value              || 'male';
+    const height = parseFloat(document.getElementById('height').value) || 175;
+    const weight = parseFloat(document.getElementById('weight').value) || 75;
+    const goal       = state.goal     || 'maintain';
+    const activity   = state.activity || 'moderate';
+    const trainingDays     = parseInt(document.getElementById('trainingDays').value);
+    const experience = document.getElementById('experience').value;
+    const equipKey   = getEquipKey();
+
+    setTimeout(() => {
+      const bmr        = Math.round(calcBMR(age, sex, height, weight));
+      const tdee       = Math.round(bmr * activityMultipliers[activity]);
+      const targetCals = Math.round(tdee + goalAdjust[goal]);
+      const split      = macroSplits[goal];
+      const protein    = Math.round((targetCals * split.p) / 4);
+      const carbs      = Math.round((targetCals * split.c) / 4);
+      const fats       = Math.round((targetCals * split.f) / 9);
+      const bmi        = (weight / ((height / 100) ** 2)).toFixed(1);
+
+      const exercises = exerciseDB[goal][equipKey] || exerciseDB[goal]['bodyweight'];
+      const dayTypes = {
+        gain:     ['Push (Chest, Shoulders, Triceps)', 'Pull (Back, Biceps)', 'Legs & Core', 'Upper full body', 'Push (variation)', 'Full body'],
+        lose:     ['HIIT + Strength A', 'Cardio circuit', 'Strength + conditioning', 'Active recovery', 'HIIT B', 'Full body burn'],
+        maintain: ['Full body A', 'Cardio + core', 'Full body B', 'Flexibility & mobility', 'Full body C', 'Active recovery'],
+        athletic: ['Power & speed', 'Strength A', 'Conditioning', 'Strength B', 'Sport-specific', 'Recovery & mobility']
+      };
+      const days = (dayTypes[goal] || dayTypes['maintain']).slice(0, trainingDays);
+
+      const daysHTML = days.map((type, i) => {
+        const pool = shuffle(exercises);
+        return buildDayPlan(i + 1, type, pool);
+      }).join('');
+
+      const tips = {
+        lose:     'A 500 kcal/day deficit leads to ~0.5 kg/week of fat loss (Hall et al., 2012). Prioritize protein to preserve muscle during a cut — aim for 1.6–2.2 g per kg of bodyweight.',
+        gain:     'A 300 kcal surplus combined with progressive overload maximizes lean mass gain while minimizing fat accumulation (Helms et al., 2014). Track weekly weights and adjust if needed.',
+        maintain: 'Body recomposition works best in novice to intermediate lifters. Progressive overload is the key driver of change — add weight or reps every 1–2 weeks.',
+        athletic: 'Periodization (alternating intensity weeks) improves athletic performance by 5–10% over linear training (Harries et al., 2015). Prioritize sleep and nutrition around training sessions.'
+      };
+
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('planContent').style.display = 'block';
+      document.getElementById('planContent').innerHTML = `
+        <div class="results-hero">
+          <h2>Your personalized plan is ready</h2>
+          <p>Goal: ${goalLabels[goal]} &nbsp;&middot;&nbsp; ${trainingDays} days/week &nbsp;&middot;&nbsp; ${experience}</p>
+        </div>
+
+        <div class="section-heading"><i class="ti ti-calculator"></i> Daily nutrition targets</div>
+
+        <div class="macro-grid">
+          <div class="macro-card"><div class="m-val">${targetCals}</div><div class="m-label">kcal / day</div></div>
+          <div class="macro-card"><div class="m-val">${protein}g</div><div class="m-label">Protein</div></div>
+          <div class="macro-card"><div class="m-val">${carbs}g</div><div class="m-label">Carbs</div></div>
+          <div class="macro-card"><div class="m-val">${fats}g</div><div class="m-label">Fats</div></div>
+        </div>
+
+        <div class="calorie-bar">
+          <div class="cal-seg" style="width:${Math.round(split.p*100)}%;background:var(--green);"></div>
+          <div class="cal-seg" style="width:${Math.round(split.c*100)}%;background:var(--green-mid);"></div>
+          <div class="cal-seg" style="width:${Math.round(split.f*100)}%;background:#9FE1CB;"></div>
+        </div>
+        <div class="macro-legend">
+          <span><span class="dot" style="background:var(--green)"></span>Protein ${Math.round(split.p*100)}%</span>
+          <span><span class="dot" style="background:var(--green-mid)"></span>Carbs ${Math.round(split.c*100)}%</span>
+          <span><span class="dot" style="background:#9FE1CB"></span>Fats ${Math.round(split.f*100)}%</span>
+        </div>
+
+        <div class="stats-grid" style="margin-top:1.25rem;">
+          <div class="macro-card"><div class="m-val">${bmr}</div><div class="m-label">BMR (kcal)</div></div>
+          <div class="macro-card"><div class="m-val">${tdee}</div><div class="m-label">TDEE (kcal)</div></div>
+          <div class="macro-card"><div class="m-val">${bmi}</div><div class="m-label">BMI</div></div>
+          <div class="macro-card"><div class="m-val">${Math.round(weight * 2.205)} lb</div><div class="m-label">Weight (lbs)</div></div>
+        </div>
+
+        <div class="tip-box">
+          <i class="ti ti-bulb"></i>
+          <p><strong>Research note:</strong> ${tips[goal]}</p>
+        </div>
+
+        <div class="section-heading"><i class="ti ti-calendar-week"></i> Your ${trainingDays}-day training plan</div>
+        <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1.25rem;">
+          Tap any day to expand. Each exercise includes a GIF demonstration and the equipment needed.
+        </p>
+
+        ${daysHTML}
+
+        <hr class="divider">
+        <button class="btn-secondary" onclick="resetApp()">
+          <i class="ti ti-refresh"></i>&nbsp; Start over
+        </button>
+      `;
+    }, 2000);
+  }
+
+  function resetApp() {
+    state.goal = null;
+    state.activity = null;
+    state.equip = new Set();
+    document.getElementById('planContent').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'block';
+    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+    goTo(0);
+  }
+</script>
+</body>
+</html>
