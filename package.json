@@ -1,0 +1,9 @@
+{
+  "name": "fitplan",
+  "version": "1.0.0",
+  "description": "FitPlan - Science-based gym training app",
+  "scripts": {
+    "build": "echo 'Static site, no build needed'",
+    "start": "echo 'Static site'"
+  }
+}
